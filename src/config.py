@@ -29,10 +29,10 @@ MAG_MIN = 2.5
 
 # tables
 
-TBL_RAW = "events_raw"
 TBL_CLEAN = "events_clean"
 TBL_NETWORKS = "networks"
 TBL_PREDICTIONS = "predictions"
+TBL_MEDIANS = "medians"
 
 # constants
 
