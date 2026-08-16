@@ -11,6 +11,7 @@ WAREHOUSE_DIR = DATA_DIR / "warehouse"
 LOG_DIR = BASE_DIR / "logs"
 CATALOG_DB = WAREHOUSE_DIR / "quakes.db"
 MODEL_PATH = WAREHOUSE_DIR / "model.pkl"
+LOG_FILE = LOG_DIR / "pipeline.log"
 
 # data urls
 

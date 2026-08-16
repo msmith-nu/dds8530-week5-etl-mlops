@@ -10,8 +10,10 @@ from sqlalchemy import create_engine
 import mlflow
 import mlflow.sklearn
 import joblib
-from src import config
+from src import config, logs
 
+# set up logging
+log = logs.get_logger(__name__)
 
 def load_training_data():
     """Connect to SQL, filter to training network and then run and return train test split using stratification."""
@@ -61,14 +63,14 @@ def train_models(X_train, X_test, y_train, y_test):
             })
             mlflow.sklearn.log_model(result.best_estimator_, name=candidate)
             # print results
-            print(f"Model: {candidate}. AUC: {auc}. Average Precision: {prec}")
+            log.info(f"Model: {candidate}. AUC: {auc}. Average Precision: {prec}")
             # store results if they're the best
             if auc > score_best:
                 score_best = auc
                 model_best = result.best_estimator_
 
     # print the final results
-    print(f"Best Model: {model_best.steps[-1][0]} with score {score_best}.")
+    log.info(f"Best Model: {model_best.steps[-1][0]} with score {score_best}.")
 
     # return the best results
     return model_best, score_best
@@ -81,7 +83,7 @@ def main():
 
     joblib.dump(model, config.MODEL_PATH)
 
-    print(f"Model {model.steps[-1][0]} saved to {config.MODEL_PATH}. Best score: {score}")
+    log.info(f"Model {model.steps[-1][0]} saved to {config.MODEL_PATH}. Best score: {score}")
 
 if __name__ == "__main__":
     main()

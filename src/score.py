@@ -2,7 +2,10 @@
 import joblib
 import pandas as pd
 from sqlalchemy import create_engine
-from src import config, extract, transform
+from src import config, extract, transform, logs
+
+# set up logging
+log = logs.get_logger(__name__)
 
 def main():
     """Load the stored model and medians, then read the live feed, make predictions,
@@ -26,7 +29,7 @@ def main():
     # check if it's empty. do this after cleaning because cleaning drops
     # non-earthquake events
     if df.empty:
-        print("No live events to score.")
+        log.info("No live events to score.")
         return
 
     # predict significant event
@@ -41,12 +44,10 @@ def main():
     df_output.to_sql(config.TBL_PREDICTIONS, con=engine, if_exists="append", index=False)
 
     # print how many events we scored
-    print(f"Scored {len(df_output)} at {pd.Timestamp.now()}")
+    log.info(f"Scored {len(df_output)} at {pd.Timestamp.now()}")
 
 if __name__ == "__main__":
       main()
-
-
 
     
 

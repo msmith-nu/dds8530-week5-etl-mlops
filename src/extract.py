@@ -2,7 +2,10 @@
 import pandas as pd
 import requests
 from sqlalchemy import create_engine
-from src import config
+from src import config, logs
+
+# set up logging
+log = logs.get_logger(__name__)
 
 # usgs limits how much we can download at once. so download in quarters. to
 # download in quarters, have to calculate quarters
@@ -53,14 +56,14 @@ def get_data(dates):
         # check if this one was already downloaded, if so skip
         if current.exists():
             # print a status update
-            print(f"Data file for {start} already exists. Skipping.")
+            log.info(f"Data file for {start} already exists. Skipping.")
             continue
 
         # if it doesn't already exist, pull and write it
         request_data(start_date=start, end_date=end, destination=current)
 
         # print a status update
-        print(f"Pulled data file for {start}.")
+        log.info(f"Pulled data file for {start}.")
 
 
         
@@ -150,8 +153,8 @@ def main():
     # pull down data from time frame
     get_data(dates)
 
-    # print summary line
-    print(f"Finished pulling from {config.START_DATE} to {config.END_DATE}.")
+    # log summary line
+    log.info(f"Finished pulling from {config.START_DATE} to {config.END_DATE}.")
 
 
 if __name__ == "__main__":

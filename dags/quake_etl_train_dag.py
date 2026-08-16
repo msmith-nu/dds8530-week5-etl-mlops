@@ -1,4 +1,4 @@
-"""Airflow DAG: extract -> transform -> load -> train. Runs weekly."""
+"""Airflow DAG: extract -> transform -> load -> train. Weekly."""
 
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator

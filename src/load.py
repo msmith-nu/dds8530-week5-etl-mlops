@@ -1,8 +1,10 @@
 """Runs extract, then transforms them, then loads them into SQL."""
 import pandas as pd
 from sqlalchemy import create_engine
-from src import config, extract, transform
+from src import config, extract, transform, logs
 
+# set up logging
+log = logs.get_logger(__name__)
 
 def load_events(df):
     """Writes a cleaned DataFrame into the SQL database."""
@@ -33,7 +35,7 @@ def main():
 
     load_medians(medians)
 
-    print(len(df))
+    log.info(f"Wrote {len(df)} rows to {config.TBL_CLEAN}.")
 
 if __name__ == "__main__":
     main()
