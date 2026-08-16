@@ -1,4 +1,5 @@
 # DDS8530 Week5 ETL-MLOPS Assignment
+![CI](https://github.com/msmith-nu/dds8530-week5-etl-mlops/actions/workflows/ci.yml/badge.svg)
 
 ## Project Information
 
@@ -8,7 +9,25 @@ This repository is the code component of an assignment in DDS8530 where we were 
 - Use said data in a machine learning algorithm that predicts classification of earthquakes as being significant (magnitude >= 4.0) or not based on their metadata. The optimized machine learning algorithm (logistic regression) achieves an AUC of 0.7732 with average precision of 0.1621 on 21,459 Alaska events.
 - Configure that machine learning algorithm to be available via API to run on new data as part of a MLOps workflow.
 
+## Stack
 
+| Tool | Role in this project |
+|---|---|
+| `requests` | Pulls both USGS sources: quarterly bulk CSV batches and the live GeoJSON feed |
+| `pandas` | DataFrame operations throughout; handles the small live batch at scoring time |
+| `Dask` | Processes the full 313,181-row catalog across 44 partitions without loading it all into memory |
+| `SQLAlchemy` | Reads the `networks` lookup table and writes every table to the warehouse |
+| SQLite | The warehouse itself (`data/warehouse/quakes.db`) |
+| `scikit-learn` | `Pipeline` with `StandardScaler` for normalization, `GridSearchCV` for tuning, logistic regression and random forest as candidates |
+| `MLflow` | Experiment tracking: parameters, metrics, and model artifacts for every run |
+| `joblib` | Serializes the winning pipeline to `model.pkl` |
+| `FastAPI` | REST API exposing `/health`, `/predict`, and `/metrics` |
+| `uvicorn` | ASGI server that runs the API |
+| `prometheus-fastapi-instrumentator` | Exposes 14 Prometheus metric families, including per-endpoint request counts and latency histograms |
+| Apache Airflow | Two DAGs: weekly ETL and retraining, hourly live scoring |
+| `pytest` | Unit tests over the shared cleaning function |
+| GitHub Actions | CI on every push: clean install, import check, test run |
+| `logging` | Writes to console and `logs/pipeline.log` with timestamps and module names |
 
 ## Data Source
 
@@ -22,9 +41,9 @@ This project used a Python 3.12 virtual environment created with `uv`. It can be
 
 1. `config.py` sets environmental constants
 2. `extract.py` retrieves and extracts the data from the USGS sources (bulk historical is 2015-01-01 through 2026-01-01, chunked by quarters, for a total of 44 files, 56MB).
-3. `transform.py` cleans and transforms the extracted data.
-4. `load.py` loads the cleaned and transformed data into a SQL database.
-5. `train.py` optimizes a logistic regression and random forest classifier on the training dataset to predict whether the earthquake was significant (magnitude > 4.0) based on metadata. One important point to note is that to avoid cross-network bleedover driving the training algorithm, only data from the Alaska network is used in training.
+3. `transform.py` cleans and transforms the extracted data. Because results are distributed across multiple files this step uses **Dask** to process rows across 44 partitions and **pandas** for the live data processing. Cleaning function is written once and applied across all modules.
+4. `load.py` loads the cleaned and transformed data into a SQL database using **SQLAlchemy** to write into a **SQLite** database in batches of 10,000 rows.
+5. `train.py` scales the data with **scikit-learn** `StandardScaler` and optimizes a logistic regression and random forest classifier on the training dataset (using `GridSearchCV` for tuning) to predict whether the earthquake was significant (magnitude >= 4.0) based on metadata. The results are all logged to **MLflow**. One important point to note is that to avoid cross-network bleed over driving the training algorithm, only data from the Alaska network is used in training.
 6. `score.py` uses the optimized and best performing model from `train.py` to calculate probabilities for new events retrieved from the USGS live feed.
 7. `api/main.py` sets up an API allowing for the model to be accessed via URL to classify new input data.
 8. `dags/` schedules weekly training data retrievals as well as hourly live data retrievals using Apache Airflow.
@@ -50,7 +69,7 @@ python -m src.score # pull live feed, score, and append predictions to SQL datab
 ## API
 
 - `uvicorn api.main:app`
-- has functionality for `/health`, `/predict`, and `/metrics` requests
+- has functionality for `/health`, `/predict`, and `/metrics` requests (the latter using **Prometheus**).
 
 **Example request:**
 
@@ -113,3 +132,5 @@ Several preconfigured tests are included:
 `python -m pytest tests/ -v`
 
 Cover filtering non-earthquake events, events missing a magnitude, events missing a non-magnitude value (for which the median should be imputed), events that are not significant, and events that are.
+
+`.github/workflows/ci.yml` is configured to verify module imports and run test suite on a clean machine with every push using Github actions.
