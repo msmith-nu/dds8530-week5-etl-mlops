@@ -93,7 +93,8 @@ def get_live():
                 "dmin" : properties.get("dmin"),
                 "rms" : properties.get("rms"),
                 "net" :properties.get("net"),
-                "id" : feature["id"]
+                "id" : feature["id"],
+                "type": properties.get("type")
             }
         )
 
