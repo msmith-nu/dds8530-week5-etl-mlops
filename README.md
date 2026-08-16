@@ -70,10 +70,12 @@ curl -X POST http://127.0.0.1:8000/predict \
 
 **Example response:**
 
+```
 {
   "probability": 0.00021725060368453196,
   "is_significant": false
 }
+```
 
 Probability is the estimate probability that the quake's magnitude was 4.0 or greater. The threshold for `is_significant` is 0.5.
 
