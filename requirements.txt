@@ -1,0 +1,20 @@
+# Core ETL
+pandas
+dask[dataframe]
+requests
+sqlalchemy
+
+# ML + tracking
+scikit-learn
+mlflow
+
+# Serving + monitoring
+fastapi
+uvicorn[standard]
+prometheus-fastapi-instrumentator
+
+# Testing
+pytest
+
+# Orchestration
+apache-airflow
